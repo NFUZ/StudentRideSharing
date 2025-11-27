@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Create Ride | Student Ride-Sharing</title>
+  <link rel="stylesheet" href="styles.css">
+
+  <style>
+    .page-wrapper {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    .page-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1E4BB8;
+      margin-bottom: 6px;
+    }
+    .page-sub {
+      font-size: 13px;
+      color: #52606D;
+      margin-bottom: 22px;
+    }
+
+    .form-card {
+      background: #ffffff;
+      padding: 20px 22px;
+      border-radius: 16px;
+      box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 18px;
+    }
+
+    .form-section {
+      border-right: 1px solid #E4E7EB;
+      padding-right: 16px;
+    }
+    .summary-section {
+      padding-left: 8px;
+    }
+
+    .field-label {
+      font-size: 12px;
+      color: #52606D;
+      margin-bottom: 4px;
+    }
+    .field-input {
+      width: 100%;
+      padding: 9px 10px;
+      border-radius: 8px;
+      border: 1px solid #CBD2D9;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+    .field-input:focus {
+      outline: none;
+      border-color: #1E4BB8;
+      box-shadow: 0 0 0 1px rgba(30, 75, 184, 0.22);
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+    }
+    .row > div {
+      flex: 1;
+    }
+
+    .btn-primary-wide {
+      width: 100%;
+      padding: 10px 0;
+      border-radius: 999px;
+      border: none;
+      background: #1E4BB8;
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 6px;
+    }
+    .btn-primary-wide:hover {
+      background: #163a8f;
+    }
+
+    .summary-card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #11B5A4;
+      margin-bottom: 8px;
+    }
+    .summary-line {
+      font-size: 12px;
+      color: #52606D;
+      margin-bottom: 4px;
+    }
+    .summary-highlight {
+      font-size: 18px;
+      font-weight: 700;
+      color: #11B5A4;
+      margin-top: 8px;
+      margin-bottom: 4px;
+    }
+
+    .no-access {
+      padding: 12px;
+      background: #FEE2E2;
+      color: #991B1B;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-bottom: 20px;
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="navbar">
+    <div>
+      <div class="logo">Student Ride-Sharing</div>
+      <div class="tagline">Safe rides for university students.</div>
+    </div>
+    <div>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="login.html">Logout</a>
+    </div>
+  </div>
+
+  <div class="page-wrapper">
+    <div class="page-title">Offer a New Ride</div>
+    <div class="page-sub">
+      Create a ride from your location to campus or back and let other students join.
+    </div>
+
+    
+    <div id="noAccessBox" class="no-access"></div>
+
+    <div id="formContainer" class="form-card" style="display:none;">
+      
+      <div class="form-section">
+        <div class="row">
+          <div>
+            <div class="field-label">From</div>
+            <input id="from" class="field-input" placeholder="e.g., Dorm A, Parking P3">
+          </div>
+          <div>
+            <div class="field-label">To</div>
+            <input id="to" class="field-input" placeholder="e.g., Main Gate, Library">
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <div class="field-label">Date & Time</div>
+            <input id="time" class="field-input" type="datetime-local">
+          </div>
+
+          <div>
+            <div class="field-label">Available Seats</div>
+            <input id="seats" class="field-input" type="number" min="1" max="4" value="3">
+          </div>
+        </div>
+
+        <div>
+          <div class="field-label">Total Trip Cost (SR)</div>
+          <input id="totalCost" class="field-input" type="number" min="1" value="30">
+        </div>
+
+        <button class="btn-primary-wide" onclick="createRide()">Create Ride</button>
+      </div>
+
+      <div class="summary-section">
+        <div class="summary-card-title">Cost Summary</div>
+        <div class="summary-line" id="summaryRoute">Route: –</div>
+        <div class="summary-line" id="summaryTime">Time: –</div>
+        <div class="summary-line" id="summarySeats">Seats: –</div>
+        <div class="summary-line" id="summaryTotal">Total Cost: – SR</div>
+
+        <div class="summary-highlight" id="summaryPerRider">– SR / rider</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Student Ride-Sharing © 2025 – Campus Carpool Platform for Students
+  </div>
+
+  <script>
+    const API_BASE = "http://localhost:3000";
+
+    (function checkRole() {
+      const role = localStorage.getItem("role");
+      const userId = Number(localStorage.getItem("userId"));
+
+      const noAccessBox = document.getElementById("noAccessBox");
+      const form = document.getElementById("formContainer");
+
+      if (!userId || !role) {
+        noAccessBox.textContent = "Please log in as a driver to offer a ride.";
+        noAccessBox.style.display = "block";
+        return;
+      }
+
+      if (role !== "driver") {
+        noAccessBox.textContent = "Only drivers can offer rides. Switch to a driver account.";
+        noAccessBox.style.display = "block";
+        return;
+      }
+
+      form.style.display = "grid";
+    })();
+
+    
+    function updateSummary() {
+      const from = document.getElementById("from").value || "–";
+      const to = document.getElementById("to").value || "–";
+      const time = document.getElementById("time").value || "–";
+      const seats = Number(document.getElementById("seats").value);
+      const cost = Number(document.getElementById("totalCost").value);
+
+      document.getElementById("summaryRoute").textContent = `Route: ${from} → ${to}`;
+      document.getElementById("summaryTime").textContent = `Time: ${time}`;
+      document.getElementById("summarySeats").textContent = `Seats: ${seats || "–"}`;
+      document.getElementById("summaryTotal").textContent = `Total Cost: ${cost || "–"} SR`;
+
+      if (seats > 0 && cost > 0) {
+        document.getElementById("summaryPerRider").textContent =
+          `${(cost / seats).toFixed(2)} SR / rider`;
+      } else {
+        document.getElementById("summaryPerRider").textContent = `– SR / rider`;
+      }
+    }
+
+    ["from", "to", "time", "seats", "totalCost"].forEach(id => {
+      document.getElementById(id).addEventListener("input", updateSummary);
+    });
+
+    
+    async function createRide() {
+      const driverId = Number(localStorage.getItem("userId")); 
+
+      const from = document.getElementById("from").value.trim();
+      const to = document.getElementById("to").value.trim();
+      const time = document.getElementById("time").value;
+      const seats = Number(document.getElementById("seats").value);
+      const totalCost = Number(document.getElementById("totalCost").value);
+
+      if (!from || !to || !time || !seats || !totalCost) {
+        alert("Please fill all fields.");
+        return;
+      }
+
+      const body = {
+        driverId,
+        from,
+        to,
+        time,
+        seats,
+        basePrice: totalCost
+      };
+
+      try {
+        const res = await fetch(`${API_BASE}/api/rides`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.error || "Failed to create ride.");
+          return;
+        }
+
+        alert("Ride created successfully!");
+        window.location.href = "dashboard.html";
+
+      } catch (err) {
+        alert("Server error.");
+        console.error(err);
+      }
+    }
+
+    updateSummary();
+  </script>
+
+</body>
+</html>

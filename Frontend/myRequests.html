@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>My Requests | Student Ride-Sharing</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .page-wrapper {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1E4BB8;
+      margin-bottom: 6px;
+    }
+
+    .page-sub {
+      font-size: 13px;
+      color: #52606D;
+      margin-bottom: 10px;
+    }
+
+    .request-card {
+      background: #ffffff;
+      padding: 16px 18px;
+      border-radius: 14px;
+      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+      margin-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .req-left {
+      font-size: 13px;
+      color: #52606D;
+    }
+
+    .req-route {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1E4BB8;
+      margin-bottom: 4px;
+    }
+
+    .req-meta {
+      font-size: 12px;
+      margin-bottom: 2px;
+    }
+
+    .req-status {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 999px;
+      display: inline-block;
+    }
+
+    .status-pending {
+      background: #FEF3C7;
+      color: #92400E;
+    }
+
+    .status-approved {
+      background: #DCFCE7;
+      color: #166534;
+    }
+
+    .status-rejected {
+      background: #FEE2E2;
+      color: #991B1B;
+    }
+
+    .no-requests {
+      text-align: center;
+      font-size: 13px;
+      color: #7B8794;
+      margin-top: 20px;
+    }
+
+    .btn-small {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      border: none;
+      color: white;
+    }
+
+    .btn-accept {
+      background: #10b981;
+    }
+
+    .btn-reject {
+      background: #ef4444;
+      margin-left: 6px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="navbar">
+    <div>
+      <div class="logo">Student Ride-Sharing</div>
+      <div class="tagline">Safe rides for university students.</div>
+    </div>
+    <div>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="login.html">Logout</a>
+    </div>
+  </div>
+
+  <div class="page-wrapper">
+    <div class="page-title">My Ride Requests</div>
+    <div class="page-sub" id="roleBanner">
+    </div>
+
+    <div id="requestsContainer"></div>
+  </div>
+
+  <div class="footer">
+    Student Ride-Sharing &copy; 2025 – Campus Carpool Platform for Students
+  </div>
+
+  <script>
+  const API_BASE = "http://localhost:3000";
+
+  function getStatusClass(status) {
+    if (status === "accepted") return "status-approved";
+    if (status === "rejected") return "status-rejected";
+    return "status-pending";
+  }
+
+  function formatStatus(status) {
+    if (status === "accepted") return "Approved";
+    if (status === "rejected") return "Rejected";
+    if (status === "pending") return "Pending";
+    return status;
+  }
+
+  function renderRiderRequests(requests) {
+    const container = document.getElementById("requestsContainer");
+    container.innerHTML = "";
+
+    if (!requests.length) {
+      container.innerHTML = `<div class="no-requests">You have no ride requests yet.</div>`;
+      return;
+    }
+
+    requests.forEach(r => {
+      const card = document.createElement("div");
+      card.className = "request-card";
+
+      card.innerHTML = `
+        <div class="req-left">
+          <div class="req-route">${r.from} → ${r.to}</div>
+          <div class="req-meta">Ride ID: ${r.rideId} | Driver ID: ${r.driverId}</div>
+          <div class="req-meta">Time: ${r.time}</div>
+        </div>
+        <div>
+          <span class="req-status ${getStatusClass(r.status)}">
+            ${formatStatus(r.status)}
+          </span>
+        </div>
+      `;
+
+      container.appendChild(card);
+    });
+  }
+
+  function renderDriverRequests(groups) {
+    const container = document.getElementById("requestsContainer");
+    container.innerHTML = "";
+
+    if (!groups.length) {
+      container.innerHTML = `<div class="no-requests">No requests for your rides yet.</div>`;
+      return;
+    }
+
+    groups.forEach(group => {
+      const { ride, requests, acceptedCount } = group;
+
+      const card = document.createElement("div");
+      card.className = "request-card";
+
+      let inner = `
+        <div class="req-left">
+          <div class="req-route">${ride.from} → ${ride.to}</div>
+          <div class="req-meta">Ride ID: ${ride.id}</div>
+          <div class="req-meta">Time: ${ride.time}</div>
+          <div class="req-meta">Accepted students: ${acceptedCount}</div>
+          <div class="req-meta">Total requests: ${requests.length}</div>
+        </div>
+        <div style="font-size:12px;">
+      `;
+
+      requests.forEach(req => {
+        inner += `
+          <div style="margin-bottom:6px;border-top:1px solid #E5E7EB;padding-top:4px;">
+            Student ID: ${req.studentId} –
+            <span class="req-status ${getStatusClass(req.status)}">
+              ${formatStatus(req.status)}
+            </span>
+            ${
+              req.status === "pending"
+                ? `
+                  <button class="btn-small btn-accept"
+                          onclick="updateStatus(${req.id}, 'accepted')">
+                    Accept
+                  </button>
+                  <button class="btn-small btn-reject"
+                          onclick="updateStatus(${req.id}, 'rejected')">
+                    Reject
+                  </button>
+                `
+                : ""
+            }
+          </div>
+        `;
+      });
+
+      inner += `</div>`;
+      card.innerHTML = inner;
+      container.appendChild(card);
+    });
+  }
+
+  async function loadRequests() {
+    const userId = Number(localStorage.getItem("userId"));
+    const role = localStorage.getItem("role");
+    const container = document.getElementById("requestsContainer");
+
+    if (!userId || !role) {
+      container.innerHTML = `<div class="no-requests">Please log in again.</div>`;
+      return;
+    }
+
+    try {
+      const ridesRes = await fetch(`${API_BASE}/api/rides`);
+      const rides = await ridesRes.json();
+
+      if (role === "rider") {
+        const reqRes = await fetch(`${API_BASE}/api/requests?studentId=${userId}`);
+        const rawRequests = await reqRes.json();
+
+        const merged = rawRequests.map(req => {
+          const ride = rides.find(r => r.id === req.rideId) || {};
+          return {
+            rideId: req.rideId,
+            from: ride.from || "Unknown",
+            to: ride.to || "Unknown",
+            time: ride.time || "N/A",
+            driverId: ride.driverId || "N/A",
+            status: req.status
+          };
+        });
+
+        renderRiderRequests(merged);
+
+      } else if (role === "driver") {
+        const reqRes = await fetch(`${API_BASE}/api/requests`);
+        const rawRequests = await reqRes.json();
+
+        const myRides = rides.filter(r => Number(r.driverId) === Number(userId));
+        const groups = [];
+
+        myRides.forEach(ride => {
+          
+          const rideReqs = rawRequests.filter(req => req.rideId === ride.id);
+
+          if (!rideReqs.length) return;
+
+          const uniqueByStudent = {};
+          rideReqs.forEach(req => {
+            const key = req.studentId;
+            if (!uniqueByStudent[key]) {
+              uniqueByStudent[key] = req;
+            }
+          });
+          const finalReqs = Object.values(uniqueByStudent);
+
+          const acceptedCount = finalReqs.filter(r => r.status === "accepted").length;
+
+          groups.push({
+            ride,
+            requests: finalReqs,
+            acceptedCount
+          });
+        });
+
+        renderDriverRequests(groups);
+
+      } else {
+        container.innerHTML = `<div class="no-requests">Unknown role. Please log in again.</div>`;
+      }
+
+    } catch (err) {
+      console.error(err);
+      container.innerHTML = `<div class="no-requests">Error loading requests.</div>`;
+    }
+  }
+
+  async function updateStatus(requestId, status) {
+    try {
+      const res = await fetch(`${API_BASE}/api/requests/${requestId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "Failed to update status.");
+        return;
+      }
+
+      alert("Status updated.");
+      loadRequests();
+    } catch (err) {
+      console.error(err);
+      alert("Server error while updating status.");
+    }
+  }
+
+  loadRequests();
+</script>
+
+</body>
+
+</html>

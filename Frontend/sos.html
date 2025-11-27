@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>SOS & Safety | Student Ride-Sharing</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .page-wrapper {
+      max-width: 650px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1E4BB8;
+      margin-bottom: 6px;
+    }
+
+    .page-sub {
+      font-size: 13px;
+      color: #52606D;
+      margin-bottom: 18px;
+    }
+
+    .card {
+      background: #ffffff;
+      padding: 20px 22px;
+      border-radius: 16px;
+      box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+    }
+
+    .label {
+      font-size: 12px;
+      color: #52606D;
+      margin-bottom: 4px;
+    }
+
+    .input,
+    .select,
+    .textarea {
+      width: 100%;
+      padding: 9px 10px;
+      border-radius: 8px;
+      border: 1px solid #CBD2D9;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .input:focus,
+    .select:focus,
+    .textarea:focus {
+      outline: none;
+      border-color: #1E4BB8;
+      box-shadow: 0 0 0 1px rgba(30, 75, 184, 0.22);
+    }
+
+    .textarea {
+      resize: vertical;
+      min-height: 90px;
+    }
+
+    .btn-primary-wide {
+      width: 100%;
+      padding: 10px 0;
+      border-radius: 999px;
+      border: none;
+      background: #DC2626;
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .btn-primary-wide:hover {
+      background: #b91c1c;
+    }
+
+    .msg {
+      font-size: 12px;
+      margin-top: 8px;
+      display: none;
+    }
+
+    .msg.error {
+      color: #D64545;
+    }
+
+    .msg.success {
+      color: #16A34A;
+    }
+
+    .hint {
+      font-size: 11px;
+      color: #9CA3AF;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="navbar">
+    <div>
+      <div class="logo">Student Ride-Sharing</div>
+      <div class="tagline">Safe rides for university students.</div>
+    </div>
+    <div>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="login.html">Logout</a>
+    </div>
+  </div>
+
+  <div class="page-wrapper">
+    <div class="page-title">Safety / SOS</div>
+    <div class="page-sub">
+      If you experienced an emergency or any safety issue during a ride, please submit a quick report below.
+    </div>
+
+    <div class="card">
+      <div id="errorBox" class="msg error"></div>
+      <div id="successBox" class="msg success"></div>
+
+      <div class="label">Type of issue</div>
+      <select id="issueType" class="select">
+        <option value="emergency">Emergency (SOS)</option>
+        <option value="safety">Safety concern</option>
+        <option value="driver_behavior">Driver behavior</option>
+        <option value="ride_issue">Issue with ride (location / timing / route)</option>
+        <option value="other">Other</option>
+      </select>
+
+      <div class="label">Ride ID (Pre-filled automatically)</div>
+      <input id="rideIdInput" class="input" type="number" min="1" placeholder="If your report is about a specific ride">
+
+      <div class="label">What happened?</div>
+      <textarea
+        id="descriptionInput"
+        class="textarea"
+        placeholder="Describe what happened, where, and when?"></textarea>
+
+      <button class="btn-primary-wide" onclick="submitSos()">
+        🚨 Send SOS Report
+      </button>
+    </div>
+  </div>
+
+  <div class="footer">
+    Student Ride-Sharing &copy; 2025 – Campus Carpool Platform for Students
+  </div>
+
+  <script>
+    const API_BASE = "http://localhost:3000";
+
+    function showError(msg) {
+      const e = document.getElementById("errorBox");
+      const s = document.getElementById("successBox");
+      e.textContent = msg;
+      e.style.display = "block";
+      s.style.display = "none";
+    }
+
+    function showSuccess(msg) {
+      const e = document.getElementById("errorBox");
+      const s = document.getElementById("successBox");
+      s.textContent = msg;
+      s.style.display = "block";
+      e.style.display = "none";
+    }
+
+    function clearForm() {
+      document.getElementById("descriptionInput").value = "";
+    }
+
+    (function prefillRideId() {
+      const storedRideId = localStorage.getItem("selectedRideId");
+      if (storedRideId) {
+        document.getElementById("rideIdInput").value = storedRideId;
+      }
+    })();
+
+    async function submitSos() {
+      const type = document.getElementById("issueType").value;
+      const rideIdRaw = document.getElementById("rideIdInput").value.trim();
+      const description = document.getElementById("descriptionInput").value.trim();
+
+      if (!description) {
+        showError("Please write a short description of what happened.");
+        return;
+      }
+
+      const rideId = rideIdRaw ? Number(rideIdRaw) : null;
+      const studentId = localStorage.getItem("userId");
+      const role = localStorage.getItem("role");
+      const finalDescription =
+        `[Student: ${studentId || "unknown"}, Role: ${role || "unknown"}]\n` +
+        description;
+
+      try {
+        const res = await fetch(`${API_BASE}/api/sos`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            rideId: rideId || null,
+            type,
+            description: finalDescription
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          showError(data.error || "Failed to send SOS report.");
+          return;
+        }
+
+        showSuccess("Your SOS report has been submitted. Our team will review it!");
+        clearForm();
+
+      } catch (err) {
+        console.error(err);
+        showError("Server error while sending SOS report.");
+      }
+
+      setTimeout(() => window.location.href = "dashboard.html", 1500);
+
+    }
+  </script>
+
+</body>
+</html>

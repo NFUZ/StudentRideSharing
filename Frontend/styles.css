@@ -1,0 +1,183 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+body {
+  background: #F5F7FB;
+  color: #1F2933;
+}
+
+
+.navbar {
+  background: #1E4BB8;
+  color: white;
+  padding: 12px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar .logo {
+  font-weight: 700;
+  font-size: 20px;
+}
+
+.navbar .tagline {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.navbar a {
+  color: white;
+  text-decoration: none;
+  margin-left: 16px;
+  font-size: 14px;
+}
+
+/* محتوى الصفحة الرئيسية */
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 40px;
+  gap: 40px;
+}
+
+.hero-text {
+  max-width: 460px;
+}
+
+.hero-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1E4BB8;
+  margin-bottom: 12px;
+}
+
+.hero-subtitle {
+  font-size: 15px;
+  color: #52606D;
+  margin-bottom: 18px;
+}
+
+.hero-badges {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.badge {
+  font-size: 11px;
+  background: #E3ECFF;
+  color: #1E4BB8;
+  padding: 4px 8px;
+  border-radius: 999px;
+}
+
+.badge.safe {
+  background: #DDF7F2;
+  color: #11B5A4;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.btn-primary {
+  background: #1E4BB8;
+  color: white;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-secondary {
+  background: white;
+  color: #1E4BB8;
+  border: 1px solid #CBD2D9;
+  padding: 10px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.hero-note {
+  font-size: 12px;
+  color: #7B8794;
+}
+
+.hero-visual {
+  background: white;
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  min-width: 280px;
+}
+
+.hero-visual-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.hero-visual-list {
+  list-style: none;
+  font-size: 13px;
+  color: #52606D;
+}
+
+.hero-visual-list li {
+  margin-bottom: 8px;
+}
+
+
+.features {
+  padding: 32px 40px 48px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.feature-card {
+  background: white;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+}
+
+.feature-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1E4BB8;
+  margin-bottom: 6px;
+}
+
+.feature-text {
+  font-size: 12px;
+  color: #52606D;
+}
+
+.btn-small {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  border: none;
+  color: white;
+}
+.btn-accept { background: #10b981; }
+.btn-reject { background: #ef4444; margin-left: 6px; }
+
+.footer {
+  text-align: center;
+  padding: 16px;
+  font-size: 11px;
+  color: #9AA5B1;
+}

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Find Rides | Student Ride-Sharing</title>
+  <link rel="stylesheet" href="styles.css">
+
+  <style>
+    .wrapper {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1E4BB8;
+      margin-bottom: 6px;
+    }
+
+    .sub {
+      font-size: 13px;
+      color: #52606D;
+      margin-bottom: 20px;
+    }
+
+    .search-card {
+      background: #ffffff;
+      padding: 20px 22px;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+      margin-bottom: 22px;
+    }
+
+    .label {
+      font-size: 12px;
+      color: #52606D;
+      margin-bottom: 4px;
+    }
+
+    .input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #CBD2D9;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .row > div {
+      flex: 1;
+    }
+
+    .rides-container {
+      margin-top: 26px;
+    }
+
+    .ride-card {
+      background: white;
+      padding: 18px;
+      border-radius: 14px;
+      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
+      margin-bottom: 16px;
+      transition: 0.15s ease;
+    }
+
+    .ride-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 26px rgba(15, 23, 42, 0.12);
+    }
+
+    .ride-route {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1E4BB8;
+      margin-bottom: 4px;
+    }
+
+    .ride-info {
+      font-size: 12px;
+      color: #52606D;
+      margin-bottom: 4px;
+    }
+
+    .ride-cost {
+      font-size: 16px;
+      font-weight: 700;
+      color: #11B5A4;
+      margin-top: 6px;
+    }
+
+    .no-results {
+      text-align: center;
+      margin-top: 20px;
+      color: #7B8794;
+      font-size: 13px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="navbar">
+    <div>
+      <div class="logo">Student Ride-Sharing</div>
+      <div class="tagline">Safe rides for university students.</div>
+    </div>
+    <div>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="login.html">Logout</a>
+    </div>
+  </div>
+
+  <div class="wrapper">
+    <div class="title">Find Available Rides</div>
+    <div class="sub">Search for rides created by students.</div>
+
+    <div class="search-card">
+      <div class="row">
+        <div>
+          <div class="label">From</div>
+          <input id="searchFrom" class="input" placeholder="e.g., Dorm A, Metro Station" />
+        </div>
+        <div>
+          <div class="label">To</div>
+          <input id="searchTo" class="input" placeholder="e.g., CS Building, Main Gate" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <div class="label">Date</div>
+          <input id="searchDate" class="input" type="date" />
+        </div>
+        <div>
+          <div class="label">Time (Optional)</div>
+          <input id="searchTime" class="input" type="time" />
+        </div>
+      </div>
+
+      <button class="btn-primary-wide" onclick="searchRides()">Search Rides</button>
+    </div>
+
+    <div class="rides-container" id="ridesContainer">
+      <div class="no-results">No rides found yet. Try searching using different filters.</div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    Student Ride-Sharing &copy; 2025 – Campus Carpool Platform for Students
+  </div>
+
+    <script>
+  const API_BASE = "http://localhost:3000";
+
+  function createRideCard(ride) {
+    return `
+      <div class="ride-card">
+        <div class="ride-route">${ride.from} → ${ride.to}</div>
+        <div class="ride-info">Time: ${ride.time}</div>
+        <div class="ride-info">Seats Available: ${ride.seats}</div>
+        <div class="ride-info">Driver ID: ${ride.driverId}</div>
+        <div class="ride-cost">${ride.perRider} SR / rider</div>
+        <button
+          style="
+            margin-top:8px;
+            font-size:11px;
+            padding:5px 10px;
+            border-radius:8px;
+            border:none;
+            background:#1E4BB8;
+            color:white;
+            cursor:pointer;"
+          onclick="selectRide(${ride.id})">
+          Select this ride
+        </button>
+      </div>
+    `;
+  }
+
+  async function searchRides() {
+    const from = document.getElementById("searchFrom").value.trim();
+    const to   = document.getElementById("searchTo").value.trim();
+
+    const resultsDiv = document.getElementById("ridesContainer");
+    resultsDiv.innerHTML = "";
+
+    if (!from && !to) {
+      resultsDiv.innerHTML = `
+        <div class="no-results">
+          Please enter From or To.
+        </div>`;
+      return;
+    }
+
+    try {
+      const params = new URLSearchParams();
+      if (from) params.append("from", from);
+      if (to)   params.append("to", to);
+
+      const res  = await fetch(`${API_BASE}/api/rides?` + params.toString());
+      const data = await res.json();
+
+      if (!res.ok) {
+        resultsDiv.innerHTML = `
+          <div class="no-results" style="color:#b91c1c;">
+            Error: ${data.error || "Failed to search rides."}
+          </div>`;
+        return;
+      }
+
+      if (!data.length) {
+        resultsDiv.innerHTML = `
+          <div class="no-results">
+            No rides found.
+          </div>`;
+        return;
+      }
+
+      const uniqueMap = {};
+      data.forEach(ride => {
+        const key = `${ride.driverId}-${ride.from}-${ride.to}-${ride.time}`;
+        if (!uniqueMap[key]) {
+          uniqueMap[key] = ride;
+        }
+      });
+      const uniqueRides = Object.values(uniqueMap);
+
+      resultsDiv.innerHTML = uniqueRides.map(createRideCard).join("");
+
+    } catch (err) {
+      console.error(err);
+      resultsDiv.innerHTML = `
+        <div class="no-results" style="color:#b91c1c;">
+          Server error. Is backend running?
+        </div>`;
+    }
+  }
+
+  async function selectRide(rideId) {
+    const role = localStorage.getItem("role");
+    const studentId = Number(localStorage.getItem("userId"));
+
+    if (!studentId || !role) {
+      alert("Please log in again.");
+      return;
+    }
+
+    if (role === "rider") {
+      try {
+        const res = await fetch(`${API_BASE}/api/requests`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            rideId,
+            studentId
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          alert(data.error || "Failed to send request.");
+          return;
+        }
+
+
+        localStorage.setItem("selectedRideId", String(rideId));
+        localStorage.setItem("lastRequestId", String(data.request.id));
+
+        alert("Request sent! Redirecting to My Requests...");
+        window.location.href = "myRequests.html"; 
+
+      } catch (err) {
+        console.error(err);
+        alert("Server error while sending request.");
+      }
+    } else if (role === "driver") {
+      
+      localStorage.setItem("selectedRideId", String(rideId));
+      alert("You are the driver of this ride. You can manage requests for it on the driver page later.");
+      
+    } else {
+      alert("Unknown role. Please log in again.");
+    }
+  }
+</script>
+
+</body>
+
+</html>

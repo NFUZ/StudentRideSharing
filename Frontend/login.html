@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Student Login | Ride-Sharing</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .auth-wrapper {
+      display: flex;
+      justify-content: center;
+      padding: 40px 16px;
+    }
+
+    .auth-card {
+      background: #ffffff;
+      width: 380px;
+      padding: 24px 24px 28px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+    }
+
+    .auth-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #1E4BB8;
+      margin-bottom: 6px;
+    }
+
+    .auth-subtitle {
+      font-size: 12px;
+      color: #7B8794;
+      margin-bottom: 18px;
+    }
+
+    .auth-label {
+      font-size: 12px;
+      color: #52606D;
+      margin-bottom: 4px;
+    }
+
+    .auth-input,
+    .auth-select {
+      width: 100%;
+      padding: 9px 10px;
+      border-radius: 10px;
+      border: 1px solid #CBD2D9;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .auth-input:focus,
+    .auth-select:focus {
+      outline: none;
+      border-color: #1E4BB8;
+      box-shadow: 0 0 0 1px rgba(30, 75, 184, 0.25);
+    }
+
+    .auth-error {
+      font-size: 11px;
+      color: #D64545;
+      margin-bottom: 4px;
+      display: none;
+    }
+
+    .auth-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+      margin-bottom: 6px;
+    }
+
+    .auth-small {
+      font-size: 11px;
+      color: #9AA5B1;
+      margin-top: 4px;
+    }
+
+    .auth-toggle {
+      margin-top: 18px;
+      font-size: 11px;
+      color: #52606D;
+    }
+
+    .auth-toggle button {
+      background: none;
+      border: none;
+      color: #1E4BB8;
+      cursor: pointer;
+      font-size: 11px;
+      padding: 0;
+      margin-left: 2px;
+    }
+
+    .auth-success {
+      font-size: 11px;
+      color: #11B5A4;
+      margin-top: 6px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="navbar">
+    <div>
+      <div class="logo">Student Ride-Sharing</div>
+      <div class="tagline">Safe rides for university students.</div>
+    </div>
+    <div>
+      <a href="index.html">Home</a>
+    </div>
+  </div>
+
+  <div class="auth-wrapper">
+    <div class="auth-card" id="authCard">
+      <div class="auth-title" id="authTitle">Student Login</div>
+      <div class="auth-subtitle" id="authSubtitle">
+        Log in with your <b>university email</b> to access campus ride-sharing.
+      </div>
+
+      <div class="auth-error" id="authError"></div>
+      <div class="auth-success" id="authSuccess"></div>
+
+      <div>
+        <div class="auth-label">University Email</div>
+        <input
+          id="emailInput"
+          type="email"
+          class="auth-input"
+          placeholder="example@sm.imamu.edu.sa">
+      </div>
+
+      <div>
+        <div class="auth-label">Password</div>
+        <input
+          id="passwordInput"
+          type="password"
+          class="auth-input"
+          placeholder="Enter your password">
+      </div>
+
+      <div>
+        <div class="auth-label">Role</div>
+        <select id="roleSelect" class="auth-select">
+          <option value="rider">Rider (Student passenger)</option>
+          <option value="driver">Driver (Student driver)</option>
+        </select>
+      </div>
+
+      <div class="auth-actions">
+        <button class="btn-primary" onclick="handleLogin()">Log in</button>
+        <button class="btn-secondary" onclick="handleSignup()">Create account</button>
+      </div>
+
+      <div class="auth-small">
+        This platform is for verified <b>university students</b> only.  
+        Use your official university email to join or offer rides.
+      </div>
+
+    </div>
+  </div>
+
+  <div class="footer">
+    Student Ride-Sharing &copy; 2025 – Campus Carpool Platform for Students
+  </div>
+
+  <script>
+
+    const API_BASE = "http://localhost:3000";
+
+    function showError(message) {
+      const err = document.getElementById("authError");
+      err.textContent = message;
+      err.style.display = "block";
+      document.getElementById("authSuccess").style.display = "none";
+    }
+
+    function showSuccess(message) {
+      const ok = document.getElementById("authSuccess");
+      ok.textContent = message;
+      ok.style.display = "block";
+      document.getElementById("authError").style.display = "none";
+    }
+
+    function clearMessages() {
+      document.getElementById("authError").style.display = "none";
+      document.getElementById("authSuccess").style.display = "none";
+    }
+
+    function validateInputs() {
+      clearMessages();
+      const email = document.getElementById("emailInput").value.trim();
+      const password = document.getElementById("passwordInput").value.trim();
+
+      if (!email || !password) {
+        showError("Please enter both email and password.");
+        return null;
+      }
+
+      if (!email.endsWith("@sm.imamu.edu.sa")) {
+        showError("Please use your university email (@sm.imamu.edu.sa).");
+        return null;
+      }
+
+      return { email, password };
+    }
+
+
+      async function handleLogin() {
+        clearMessages();
+
+        const email = document.getElementById("emailInput").value.trim();
+        const password = document.getElementById("passwordInput").value.trim();
+        const role = document.getElementById("roleSelect").value;
+
+        if (!email || !password) {
+          showError("Please enter both email and password.");
+          return;
+        }
+
+        try {
+          const res = await fetch(`${API_BASE}/api/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
+          });
+
+          const data = await res.json();
+
+          if (!res.ok) {
+            showError(data.error || "Invalid login.");
+            return;
+          }
+
+          localStorage.setItem("userId", data.userId);
+          localStorage.setItem("role", data.role);
+          localStorage.setItem("email", email);
+
+          showSuccess("Login successful! Redirecting...");
+
+          setTimeout(() => {
+            window.location.href = "dashboard.html";
+          }, 600);
+
+        } catch (err) {
+          showError("Server not responding. Make sure backend is running.");
+        }
+  }
+
+
+    async function handleSignup() {
+      clearMessages();
+
+      const email = document.getElementById("emailInput").value.trim();
+      const password = document.getElementById("passwordInput").value.trim();
+      const role = document.getElementById("roleSelect").value;
+
+      if (!email || !password) {
+        showError("Please enter both email and password.");
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/api/signup`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password, role })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          showError(data.error || "Signup failed.");
+          return;
+        }
+
+        showSuccess("Account created successfully! You can now log in.");
+
+      } catch (err) {
+        showError("Server not responding. Make sure backend is running.");
+      }
+    }
+  </script>
+</body>
+</html>
