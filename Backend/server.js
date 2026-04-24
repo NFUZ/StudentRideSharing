@@ -229,6 +229,37 @@ app.post("/api/sos", (req, res) => {
   res.json({ message: "SOS report stored (mock)", report });
 });
 
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: {
+    error: "Too many login attempts. Please try again after 15 minutes."
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const crypto = require('crypto');
+
+const algorithm = 'aes-256-cbc';
+const key = crypto.randomBytes(32);
+const iv = crypto.randomBytes(16);
+
+
+function encryptData(text) {
+    let cipher = crypto.createCipheriv(algorithm, Buffer.from(key), iv);
+    let encrypted = cipher.update(text);
+    encrypted = Buffer.concat([encrypted, cipher.final()]);
+
+    return iv.toString('hex') + ':' + encrypted.toString('hex');
+}
+
+const sensitiveInfo = "User_Payment_Token_12345";
+const protectedData = encryptData(sensitiveInfo);
+
+console.log("Original Data: " + sensitiveInfo);
+console.log("Protected Layer (Encrypted): " + protectedData);
+
 app.listen(PORT, () => {
   console.log(`✅ Student Ride-Sharing API running on http://localhost:${PORT}`);
 });
