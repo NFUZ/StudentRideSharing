@@ -9,28 +9,24 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [18.x]
-
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Use Node.js
+    - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: 18
 
     - name: Install dependencies
       run: npm install
-      working-directory: backend
+      working-directory: Backend
 
-    - name: Start backend server
+    - name: Start server
       run: node server.js &
-      working-directory: backend
+      working-directory: Backend
 
-    - name: Run simple API test
+    - name: Test API
       run: |
         sleep 5
         curl http://localhost:3000
