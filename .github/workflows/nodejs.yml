@@ -6,27 +6,25 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 18
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
 
-    - name: Install dependencies
-      run: npm install
-      working-directory: Backend
+      - name: Install dependencies
+        run: npm install
+        working-directory: Backend
 
-    - name: Start server
-      run: node server.js &
-      working-directory: Backend
-
-    - name: Test API
-      run: |
-        sleep 5
-        curl http://localhost:3000
+      - name: Start server and test API
+        run: |
+          node server.js > server.log 2>&1 &
+          sleep 8
+          cat server.log
+          curl --fail http://127.0.0.1:3000/
+        working-directory: Backend
